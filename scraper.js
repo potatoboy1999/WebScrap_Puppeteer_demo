@@ -1,13 +1,17 @@
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const fs = require('fs');
+const path = require('path');
 
-async function launchBrowser(visible) {
+async function launchBrowser(visible, executablePath) {
   return puppeteer.launch({
-    headless: !visible,
+    headless: visible ? false : 'shell',
+    executablePath,
     defaultViewport: { width: 1280, height: 800 },
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--lang=en-US',
+      '--disable-blink-features=AutomationControlled',
     ],
   });
 }
@@ -31,10 +35,38 @@ async function login(page, config) {
   console.log(`Logged in. Current URL: ${page.url()}`);
 }
 
-async function extractFromPage(page, pageConfig) {
+async function extractFromPage(page, pageConfig, debug) {
   console.log(`Navigating to: ${pageConfig.url}`);
-  await page.goto(pageConfig.url, { waitUntil: 'networkidle2' });
-  await page.waitForSelector(pageConfig.waitFor);
+  await page.goto(pageConfig.url, { waitUntil: 'networkidle2', timeout: 60000 });
+
+  // Dismiss cookie consent if present (IMDB uses this on first visit)
+  try {
+    const consentBtn = await page.$('[data-testid="accept-button"], .fc-cta-consent, button[aria-label="Accept"]');
+    if (consentBtn) {
+      console.log('  Dismissing cookie consent...');
+      await consentBtn.click();
+      await page.waitForNetworkIdle({ timeout: 5000 }).catch(() => {});
+    }
+  } catch {}
+
+  try {
+    await page.waitForSelector(pageConfig.waitFor, { timeout: 30000 });
+  } catch (selectorErr) {
+    if (debug) {
+      const debugDir = path.join(path.dirname(process.execPath), 'debug');
+      if (!fs.existsSync(debugDir)) fs.mkdirSync(debugDir, { recursive: true });
+      const slug = pageConfig.url.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 80);
+      await page.screenshot({ path: path.join(debugDir, `${slug}.png`), fullPage: true });
+      const pageUrl = page.url();
+      const title = await page.title();
+      const bodyText = await page.evaluate(() => document.body?.innerText?.slice(0, 2000) || '');
+      console.error(`  DEBUG: Current URL: ${pageUrl}`);
+      console.error(`  DEBUG: Page title: ${title}`);
+      console.error(`  DEBUG: Body text (first 500 chars): ${bodyText.slice(0, 500)}`);
+      console.error(`  DEBUG: Screenshot saved to debug/${slug}.png`);
+    }
+    throw selectorErr;
+  }
 
   // Custom extraction function takes priority
   if (pageConfig.custom) {

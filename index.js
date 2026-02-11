@@ -2,10 +2,15 @@ const config = require('./config');
 const { launchBrowser, login, extractFromPage } = require('./scraper');
 const { exportToCsv } = require('./csv-export');
 const { readMovieIds } = require('./xlsx-reader');
+const { ensureChromium } = require('./browser-manager');
 
 async function main() {
   const visible = process.argv.includes('--visible');
-  console.log(`Mode: ${visible ? 'visible browser' : 'headless'}`);
+  const debug = process.argv.includes('--debug');
+  console.log(`Mode: ${visible ? 'visible browser' : 'headless'}${debug ? ' (debug)' : ''}`);
+
+  // Ensure Chromium is available (downloads on first run)
+  const executablePath = await ensureChromium();
 
   // Read movie IDs from the xlsx file
   const movieIds = readMovieIds(config.movieListFile);
@@ -23,7 +28,7 @@ async function main() {
 
   let browser;
   try {
-    browser = await launchBrowser(visible);
+    browser = await launchBrowser(visible, executablePath);
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
 
@@ -40,7 +45,7 @@ async function main() {
       const pageConfig = pagesToVisit[i];
       console.log(`[${i + 1}/${pagesToVisit.length}] Scraping ${pageConfig.url}`);
       try {
-        const rows = await extractFromPage(page, pageConfig);
+        const rows = await extractFromPage(page, pageConfig, debug);
         console.log(`  Extracted ${rows.length} row(s)`);
         allData.push(...rows);
       } catch (err) {

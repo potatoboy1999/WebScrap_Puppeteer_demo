@@ -5,15 +5,24 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "start:visible": "node index.js --visible"
+    "start:visible": "node index.js --visible",
+    "start:debug": "node index.js --debug",
+    "build": "esbuild index.js --bundle --platform=node --target=node18 --outfile=dist/bundle.js && pkg dist/bundle.js --targets node18-win-x64 --output dist/imdb-scraper.exe --no-bytecode --public",
+    "build:bundle": "esbuild index.js --bundle --platform=node --target=node18 --outfile=dist/bundle.js",
+    "build:exe": "pkg dist/bundle.js --targets node18-win-x64 --output dist/imdb-scraper.exe --no-bytecode --public"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@puppeteer/browsers": "^2.10.5",
     "csv-writer": "^1.6.0",
-    "puppeteer": "^24.37.2",
+    "puppeteer-core": "^24.37.2",
     "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "@yao-pkg/pkg": "^6.5.0"
   }
 }

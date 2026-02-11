@@ -8,7 +8,7 @@ async function exportToCsv(data, outputFile) {
     return;
   }
 
-  const outputDir = path.join(__dirname, 'output');
+  const outputDir = path.join(path.dirname(process.execPath), 'output');
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
   }
