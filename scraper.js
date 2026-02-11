@@ -4,7 +4,11 @@ async function launchBrowser(visible) {
   return puppeteer.launch({
     headless: !visible,
     defaultViewport: { width: 1280, height: 800 },
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--lang=en-US',
+    ],
   });
 }
 
@@ -31,6 +35,11 @@ async function extractFromPage(page, pageConfig) {
   console.log(`Navigating to: ${pageConfig.url}`);
   await page.goto(pageConfig.url, { waitUntil: 'networkidle2' });
   await page.waitForSelector(pageConfig.waitFor);
+
+  // Custom extraction function takes priority
+  if (pageConfig.custom) {
+    return pageConfig.custom(page);
+  }
 
   const { rowSelector, dataSelectors } = pageConfig;
 
