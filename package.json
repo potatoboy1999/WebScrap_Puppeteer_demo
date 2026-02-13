@@ -7,9 +7,11 @@
     "start": "node index.js",
     "start:visible": "node index.js --visible",
     "start:debug": "node index.js --debug",
-    "build": "esbuild index.js --bundle --platform=node --target=node18 --outfile=dist/bundle.js && pkg dist/bundle.js --targets node18-win-x64 --output dist/imdb-scraper.exe --no-bytecode --public",
+    "build": "esbuild index.js --bundle --platform=node --target=node18 --outfile=dist/bundle.js && pkg dist/bundle.js --targets node18-win-x64 --output dist/imdb-scraper.exe --no-bytecode --public && pkg dist/bundle.js --targets node18-macos-x64 --output dist/imdb-scraper-macos-x64 --no-bytecode --public && pkg dist/bundle.js --targets node18-macos-arm64 --output dist/imdb-scraper-macos-arm64 --no-bytecode --public",
     "build:bundle": "esbuild index.js --bundle --platform=node --target=node18 --outfile=dist/bundle.js",
-    "build:exe": "pkg dist/bundle.js --targets node18-win-x64 --output dist/imdb-scraper.exe --no-bytecode --public"
+    "build:win": "pkg dist/bundle.js --targets node18-win-x64 --output dist/imdb-scraper.exe --no-bytecode --public",
+    "build:mac-x64": "pkg dist/bundle.js --targets node18-macos-x64 --output dist/imdb-scraper-macos-x64 --no-bytecode --public",
+    "build:mac-arm64": "pkg dist/bundle.js --targets node18-macos-arm64 --output dist/imdb-scraper-macos-arm64 --no-bytecode --public"
   },
   "keywords": [],
   "author": "",
